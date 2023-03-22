@@ -7,7 +7,7 @@ public class Node{
 	private boolean enemy;
 	private ArrayList<Node> children;
 	private Node parent;
-	private int branching = 10;
+	private int bf = 10;
 	private int gameOver;
 	
 	public Node(Board board, boolean enemy) {
@@ -44,7 +44,7 @@ public class Node{
 	public ArrayList<Node> getChildren() {
 		return this.children;
 	}
-	public int getBranching() {
-		return this.branching;
+	public int getBF() {
+		return this.bf;
 	}
 }

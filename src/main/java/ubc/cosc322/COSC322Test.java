@@ -1,4 +1,3 @@
-
 package ubc.cosc322;
 
 import java.util.ArrayList;
@@ -110,7 +109,7 @@ public class COSC322Test extends GamePlayer{
     			System.out.println("Black: " + this.userName);
     			node = new Node(new Board(true),false);
     			tree = new Tree(node);
-    			handleGameActionStart();
+    			handleGamemovestart();
     		}
     		else {
     			System.out.println("White: " + this.userName);
@@ -132,14 +131,14 @@ public class COSC322Test extends GamePlayer{
     	return true;
     }
     
-    public void handleGameActionStart() {
+    public void handleGamemovestart() {
     	Node child = new Node(new Board(node.getBoard(),false),false);
-    	ArrayList<ArrayList<Integer>> move = child.getBoard().randomMove(false);
+    	ArrayList<ArrayList<Integer>> makeMove = child.getBoard().randomMove(false);
         tree.addChild(node, child);
         node = child;
-        ArrayList<Integer> queenPrevPos = node.getBoard().move.get(0);
-        ArrayList<Integer> queenNewPos = node.getBoard().move.get(1);
-        ArrayList<Integer> arrPos = node.getBoard().move.get(2);
+        ArrayList<Integer> queenPrevPos = node.getBoard().makeMove.get(0);
+        ArrayList<Integer> queenNewPos = node.getBoard().makeMove.get(1);
+        ArrayList<Integer> arrPos = node.getBoard().makeMove.get(2);
         gameClient.sendMoveMessage(queenPrevPos,queenNewPos,arrPos);
         gamegui.updateGameState(queenPrevPos, queenNewPos, arrPos);
         System.out.println("Ally: Queen from [" + queenPrevPos.get(0) + ", " + queenPrevPos.get(1) +"]"
@@ -147,7 +146,7 @@ public class COSC322Test extends GamePlayer{
     }
     
     public void handleGameActionMove(Map<String, Object> msgDetails) {
-    	// opponent's move
+    	// opponent's Move
     	
     	ArrayList<Integer> queenPrevPos = (ArrayList<Integer>) msgDetails.get(AmazonsGameMessage.QUEEN_POS_CURR);
         ArrayList<Integer> queenNewPos = (ArrayList<Integer>) msgDetails.get(AmazonsGameMessage.QUEEN_POS_NEXT);
@@ -160,21 +159,21 @@ public class COSC322Test extends GamePlayer{
         tree.addChild(node, child);
     	node=child;
     	if(node.getBoard().gameOverCheck(true) == 0) {
-    		System.out.println("Allies are out of moves. You lose!");
+    		System.out.println("You are out of moves. You lose!");
     		return;
     	}
     	if(node.getBoard().gameOverCheck(false) == 1) {
-    		System.out.println("opponents are out of moves. You win!");
+    		System.out.println("Your opponent is out of moves. You win!");
     		return;
     	}
     	
         // our move
         System.out.println("-----------------------------------------------------------------");
-        for(Queen queen: node.getBoard().allies) {
-        	queen.actions.getActions(child.getBoard(), queen);
+        for(Queen queen: node.getBoard().player) {
+        	queen.moves.getMoves(child.getBoard(), queen);
         }
-        for(Queen queen: node.getBoard().opponents) {
-        	queen.actions.getActions(child.getBoard(), queen);
+        for(Queen queen: node.getBoard().opponent) {
+        	queen.moves.getMoves(child.getBoard(), queen);
         }
         if(node.getChildren().size() == 0) {
         	tree.growTree(node, toDepth);
@@ -182,21 +181,21 @@ public class COSC322Test extends GamePlayer{
         path = tree.findPath(node);
     	path.size();
         node = path.pop();
-        queenPrevPos = node.getBoard().move.get(0);
-        queenNewPos = node.getBoard().move.get(1);
-        arrPos = node.getBoard().move.get(2);
+        queenPrevPos = node.getBoard().makeMove.get(0);
+        queenNewPos = node.getBoard().makeMove.get(1);
+        arrPos = node.getBoard().makeMove.get(2);
         System.out.println("Ally: Queen from [" + queenPrevPos.get(0) + ", " + queenPrevPos.get(1) +"]"
         		+ " to ["+ queenNewPos.get(0) + ", " + queenNewPos.get(1) +"]");
-        System.out.println(node.getBoard().chosen);
+        System.out.println(node.getBoard().selected);
         gameClient.sendMoveMessage(queenPrevPos,queenNewPos,arrPos);
         gamegui.updateGameState(queenPrevPos, queenNewPos, arrPos);
         //node.getBoard().printBoard();
         if(node.getBoard().gameOverCheck(false) == 1) {
-    		System.out.println("opponents are out of moves. You win!");
+    		System.out.println("Your opponent is out of makeMoves. You win!");
     		return;
     	}
         if(node.getBoard().gameOverCheck(true) == 0) {
-    		System.out.println("Allies are out of moves. You lose!");
+    		System.out.println("You are out of makeMoves. You lose!");
     		return;
     	}
     }
@@ -226,4 +225,4 @@ public class COSC322Test extends GamePlayer{
 	}
 
  
-}//end of class
+}

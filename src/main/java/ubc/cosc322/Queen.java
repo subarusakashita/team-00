@@ -5,40 +5,68 @@ import java.util.ArrayList;
 public class Queen extends Tile{
 	private int prevRow, prevCol, arrRow, arrCol;
 	private boolean opponent;
-	public Actions actions;
+	public Moves moves;
 	
 	public Queen(int row, int col, boolean opponent) {
 		super(row,col);
 		this.prevRow = row;
 		this.prevCol = col;
 		this.opponent = opponent;
-		this.actions = new Actions();
+		this.moves = new Moves();
 	}
-	public int getPrevRow() {return prevRow;}
-	public void setPrevRow(int prevRow) {this.prevRow = prevRow;}
-	public int getPrevCol() {return prevCol;}
-	public void setPrevCol(int prevCol) {this.prevCol = prevCol;}
-	public int getArrRow() {return this.arrRow;}
-	public void setArrRow(int arrRow) {this.arrRow = arrRow;}
-	public int getArrCol() {return this.arrCol;}
-	public void setArrCol(int arrCol) {this.arrCol = arrCol;}
-	public boolean getOpponent() {return opponent;}
-	public ArrayList<Integer> bestArrowThrow(Board board) {
+
+	public int getPrevRow() {
+        return prevRow;
+    }
+    
+	public void setPrevRow(int prevRow) {
+        this.prevRow = prevRow;
+    }
+	
+    public int getPrevCol() {
+        return prevCol;
+    }
+
+	public void setPrevCol(int prevCol) {
+        this.prevCol = prevCol;
+    }
+
+	public int getArrRow() {
+        return this.arrRow;
+    }
+
+	public void setArrRow(int arrRow) {
+        this.arrRow = arrRow;
+    }
+
+	public int getArrCol() {
+        return this.arrCol;
+    }
+    
+	public void setArrCol(int arrCol) {
+        this.arrCol = arrCol;
+    }
+
+	public boolean getOpponent() {
+        return opponent;
+    }
+
+	public ArrayList<Integer> bestArrowShot(Board board) {
         int[][] scoredBoard = new int[10][10];
-        for(int i = 0; i < board.allies.length; i++) {
-            int row = board.allies[i].getRow();
-            int col = board.allies[i].getCol();
+
+        for(int i = 0; i < board.player.length; i++) {
+            int row = board.player[i].getRow();
+            int col = board.player[i].getCol();
             scoredBoard[row][col] = -3;
-//            scoredBoard[row][col]=-100;
         }
-        for(int i = 0; i < board.opponents.length; i++) {
-            int row = board.opponents[i].getRow();
-            int col = board.opponents[i].getCol();
+
+        for(int i = 0; i < board.opponent.length; i++) {
+            int row = board.opponent[i].getRow();
+            int col = board.opponent[i].getCol();
            scoredBoard[row][col] = 3;
-//            scoredBoard[row][col]=100;
         }
-//        for(int i = 0; i < 3; i++) {
-        for(int i = 0; i < 50; i++) {
+
+        for(int i = 0; i < 3; i++) {
             int score;
             for(int row = 0; row < 10; row++) {
                 for(int col = 0; col < 10; col++) {
@@ -73,13 +101,14 @@ public class Queen extends Tile{
             }
         }
 
-        this.actions.availableArrows(board, this);
+        this.moves.availableArrows(board, this);
         ArrayList<Integer> bestMove = new ArrayList<Integer>();
         int bestScore = -99;
-        for(int i = 0; i < this.actions.arrowThrows.size(); i++) {
-            int moveScore = scoredBoard[this.actions.arrowThrows.get(i).get(0) + this.getRow()][this.actions.arrowThrows.get(i).get(1) + this.getCol()];
+
+        for(int i = 0; i < this.moves.arrowShots.size(); i++) {
+            int moveScore = scoredBoard[this.moves.arrowShots.get(i).get(0) + this.getRow()][this.moves.arrowShots.get(i).get(1) + this.getCol()];
             if(moveScore > bestScore) {
-                bestMove = this.actions.arrowThrows.get(i);
+                bestMove = this.moves.arrowShots.get(i);
                 bestScore = moveScore;
             }
         }

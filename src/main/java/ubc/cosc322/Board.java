@@ -7,10 +7,10 @@ import ygraph.ai.smartfox.games.amazons.AmazonsGameMessage;
 
 public class Board {
 	Tile[][] board;
-	Queen[] allies;
-	Queen[] opponents;
-	Queen chosen;
-	ArrayList<ArrayList<Integer>> move;
+	Queen[] player;
+	Queen[] opponent;
+	Queen selected;
+	ArrayList<ArrayList<Integer>> makeMove;
 	
 	public Board(boolean black) {
 		if(!black) {
@@ -27,8 +27,8 @@ public class Board {
 				{null,null,null,null,null,null,null,null,null,null},
 				{null,null,null,new Queen(9,3,true),null,null,new Queen(9,6,true),null,null,null}
 			};
-			allies = new Queen[] {(Queen) board[0][3],(Queen) board[0][6],(Queen) board[3][0],(Queen) board[3][9]};
-			opponents = new Queen[] {(Queen) board[6][0],(Queen) board[6][9],(Queen) board[9][3],(Queen) board[9][6]};
+			player = new Queen[] {(Queen) board[0][3],(Queen) board[0][6],(Queen) board[3][0],(Queen) board[3][9]};
+			opponent = new Queen[] {(Queen) board[6][0],(Queen) board[6][9],(Queen) board[9][3],(Queen) board[9][6]};
 		}
 		else {
 			board = new Tile[][] 
@@ -44,14 +44,14 @@ public class Board {
 				{null,null,null,null,null,null,null,null,null,null},
 				{null,null,null,new Queen(9,3,false),null,null,new Queen(9,6,false),null,null,null}
 			};
-			allies = new Queen[] {(Queen) board[6][0],(Queen) board[6][9],(Queen) board[9][3],(Queen) board[9][6]};
-			opponents = new Queen[] {(Queen) board[0][3],(Queen) board[0][6],(Queen) board[3][0],(Queen) board[3][9]};
+			player = new Queen[] {(Queen) board[6][0],(Queen) board[6][9],(Queen) board[9][3],(Queen) board[9][6]};
+			opponent = new Queen[] {(Queen) board[0][3],(Queen) board[0][6],(Queen) board[3][0],(Queen) board[3][9]};
 		}
 	}
 	public Board(Board oldBoard, boolean enemy) {
         this.board = new Tile[10][10];
-        this.opponents = new Queen[4];
-        this.allies = new Queen[4];
+        this.opponent = new Queen[4];
+        this.player = new Queen[4];
         for(int row = 0; row < 10; row++) {
             for(int col = 0; col < 10; col++) {
                 if(oldBoard.board[row][col] instanceof Queen) {
@@ -59,16 +59,16 @@ public class Board {
                     Queen newQueen = new Queen(row, col, oldQueen.getOpponent());
                     this.board[row][col] = newQueen;
                     if(oldQueen.getOpponent()) {
-                        for(int i = 0; i < opponents.length; i++) {
-                            if(opponents[i] == null) {
-                                opponents[i] = newQueen;
+                        for(int i = 0; i < opponent.length; i++) {
+                            if(opponent[i] == null) {
+                                opponent[i] = newQueen;
                                 break;
                             }
                         }
                     } else {
-                        for(int i = 0; i < allies.length; i++) {
-                            if(allies[i] == null) {
-                                allies[i] = newQueen;
+                        for(int i = 0; i < player.length; i++) {
+                            if(player[i] == null) {
+                                player[i] = newQueen;
                                 break;
                             }
                         }
@@ -79,131 +79,139 @@ public class Board {
             }
         }
         if(enemy) {
-        	Queen[] temp = allies;
-        	allies = opponents;
-        	opponents = temp;
+        	Queen[] temp = player;
+        	player = opponent;
+        	opponent = temp;
         }
     }
 	
-	public void updateBoard(ArrayList<Integer> queenPrevPos, ArrayList<Integer> queenNewPos, ArrayList<Integer> arrPos) {
+	public void updateBoard(ArrayList<Integer> queenPrevPos, ArrayList<Integer> queenNewPos, ArrayList<Integer> arrowPos) {
 		updateBoard(queenPrevPos, queenNewPos);
-		updateBoard(arrPos);
+		updateBoard(arrowPos);
 	}
+
 	public void updateBoard(ArrayList<Integer> queenPrevPos, ArrayList<Integer> queenNewPos) {
 		int prevRow = queenPrevPos.get(0)-1, prevCol = queenPrevPos.get(1)-1, 
 			newRow = queenNewPos.get(0)-1, newCol = queenNewPos.get(1)-1;
-		setChosen((Queen) board[prevRow][prevCol]);
-		getChosen().setPrevRow(prevRow);
-		getChosen().setPrevCol(prevCol);
-		getChosen().setRow(newRow);
-		getChosen().setCol(newCol);
-		board[newRow][newCol] = getChosen();
+		setSelected((Queen) board[prevRow][prevCol]);
+		getSelected().setPrevRow(prevRow);
+		getSelected().setPrevCol(prevCol);
+		getSelected().setRow(newRow);
+		getSelected().setCol(newCol);
+		board[newRow][newCol] = getSelected();
 		board[prevRow][prevCol] = null;
 	}
-	public void updateBoard(ArrayList<Integer> arrPos) {
-		int arrRow = arrPos.get(0)-1, arrCol = arrPos.get(1)-1;
-		getChosen().setArrRow(arrRow);
-		getChosen().setArrCol(arrCol);
+
+	public void updateBoard(ArrayList<Integer> arrowPos) {
+		int arrRow = arrowPos.get(0)-1, arrCol = arrowPos.get(1)-1;
+		getSelected().setArrRow(arrRow);
+		getSelected().setArrCol(arrCol);
 		board[arrRow][arrCol] = new Arrow(arrRow,arrCol);
 	}
+
 	public ArrayList<ArrayList<Integer>> randomMove(boolean enemy) {
 		ArrayList<Integer> queenPrevPos;
         ArrayList<Integer> queenNewPos;
-        ArrayList<Integer> arrPos;
+        ArrayList<Integer> arrowPos;
 		if(enemy) {
 			if(this.gameOverCheck(true) != 1) {
-				for(Queen queen: this.opponents) {
-	            	queen.actions.getActions(this,queen);
+				for(Queen queen: this.opponent) {
+	            	queen.moves.getMoves(this,queen);
 	            }
-				chosen = this.opponents[(int) (Math.random()*4)];
-				while(chosen.actions.actions.size()==0) {
-					chosen = this.opponents[(int) (Math.random()*4)];
+				selected = this.opponent[(int) (Math.random()*4)];
+				while(selected.moves.moves.size()==0) {
+					selected = this.opponent[(int) (Math.random()*4)];
 				}
-		        ArrayList<Integer> action = chosen.actions.actions.get((int) (Math.random()*chosen.actions.actions.size()));
+		        ArrayList<Integer> action = selected.moves.moves.get((int) (Math.random()*selected.moves.moves.size()));
 		        queenPrevPos = new ArrayList<Integer>();
-		        queenPrevPos.add(chosen.getRow()+1); queenPrevPos.add(chosen.getCol()+1);
+		        queenPrevPos.add(selected.getRow()+1); queenPrevPos.add(selected.getCol()+1);
 		        queenNewPos = new ArrayList<Integer>();
-		        queenNewPos.add(chosen.getRow()+action.get(0)+1); queenNewPos.add(chosen.getCol()+action.get(1)+1);
+		        queenNewPos.add(selected.getRow()+action.get(0)+1); queenNewPos.add(selected.getCol()+action.get(1)+1);
 		        updateBoard(queenPrevPos, queenNewPos);
-		        chosen.actions.availableArrows(this, chosen);
-		        ArrayList<Integer> arrowThrow = chosen.actions.arrowThrows.get((int) (Math.random()*chosen.actions.arrowThrows.size()));
-		        arrPos = new ArrayList<Integer>();
-		        arrPos.add(chosen.getRow()+arrowThrow.get(0)+1); arrPos.add(chosen.getCol()+arrowThrow.get(1)+1);
-		        updateBoard(arrPos);
-		        move = new ArrayList<>();
-				move.add(queenPrevPos); move.add(queenNewPos); move.add(arrPos);
-				return move;
+		        selected.moves.availableArrows(this, selected);
+		        ArrayList<Integer> arrowShot = selected.moves.arrowShots.get((int) (Math.random()*selected.moves.arrowShots.size()));
+		        arrowPos = new ArrayList<Integer>();
+		        arrowPos.add(selected.getRow()+arrowShot.get(0)+1); arrowPos.add(selected.getCol()+arrowShot.get(1)+1);
+		        updateBoard(arrowPos);
+		        makeMove = new ArrayList<>();
+				makeMove.add(queenPrevPos); 
+				makeMove.add(queenNewPos); 
+				makeMove.add(arrowPos);
+				return makeMove;
 			}
 		}
 		else {
 			if(this.gameOverCheck(false) != 0) {
-				for(Queen queen: this.allies) {
-	            	queen.actions.getActions(this,queen);
+				for(Queen queen: this.player) {
+	            	queen.moves.getMoves(this,queen);
 	            }
-				chosen = this.allies[(int) (Math.random()*4)];
-				while(chosen.actions.actions.size()==0) {
-					chosen = this.allies[(int) (Math.random()*4)];
+				selected = this.player[(int) (Math.random()*4)];
+				while(selected.moves.moves.size()==0) {
+					selected = this.player[(int) (Math.random()*4)];
 				}
-		        ArrayList<Integer> action = chosen.actions.actions.get((int) (Math.random()*chosen.actions.actions.size()));
+		        ArrayList<Integer> action = selected.moves.moves.get((int) (Math.random()*selected.moves.moves.size()));
 		        queenPrevPos = new ArrayList<Integer>();
-		        queenPrevPos.add(chosen.getRow()+1); queenPrevPos.add(chosen.getCol()+1);
+		        queenPrevPos.add(selected.getRow()+1); queenPrevPos.add(selected.getCol()+1);
 		        queenNewPos = new ArrayList<Integer>();
-		        queenNewPos.add(chosen.getRow()+action.get(0)+1); queenNewPos.add(chosen.getCol()+action.get(1)+1);
+		        queenNewPos.add(selected.getRow()+action.get(0)+1); queenNewPos.add(selected.getCol()+action.get(1)+1);
 		        updateBoard(queenPrevPos, queenNewPos);
-		        chosen.actions.availableArrows(this, chosen);
-		        ArrayList<Integer> arrowThrow = chosen.bestArrowThrow(this);
-		        arrPos = new ArrayList<Integer>();
-		        arrPos.add(chosen.getRow()+arrowThrow.get(0)+1); arrPos.add(chosen.getCol()+arrowThrow.get(1)+1);
-		        updateBoard(arrPos);
-		        move = new ArrayList<>();
-				move.add(queenPrevPos); move.add(queenNewPos); move.add(arrPos);
-				return move;
+		        selected.moves.availableArrows(this, selected);
+		        ArrayList<Integer> arrowShot = selected.bestArrowShot(this);
+		        arrowPos = new ArrayList<Integer>();
+		        arrowPos.add(selected.getRow()+arrowShot.get(0)+1); arrowPos.add(selected.getCol()+arrowShot.get(1)+1);
+		        updateBoard(arrowPos);
+		        makeMove = new ArrayList<>();
+				makeMove.add(queenPrevPos); makeMove.add(queenNewPos); makeMove.add(arrowPos);
+				return makeMove;
 			}
 		}
-		move = new ArrayList<>();
-		move.add(null); move.add(null); move.add(null);
-		return move;
+		makeMove = new ArrayList<>();
+		makeMove.add(null); 
+		makeMove.add(null); 
+		makeMove.add(null);
+		return makeMove;
 	}
+	
 	public int gameOverCheck(boolean enemy) {
         if(enemy) {
-        	for(Queen queen: this.opponents) {
-            	queen.actions.getActions(this,queen);
+        	for(Queen queen: this.opponent) {
+            	queen.moves.getMoves(this,queen);
             }
-            if(this.opponents[0].actions.actions.size() == 0 && this.opponents[1].actions.actions.size() == 0 
-            && this.opponents[2].actions.actions.size() == 0 && this.opponents[3].actions.actions.size() == 0) {
+            if(this.opponent[0].moves.moves.size() == 0 && this.opponent[1].moves.moves.size() == 0 
+            && this.opponent[2].moves.moves.size() == 0 && this.opponent[3].moves.moves.size() == 0) {
             	return 1;
             }
         }
         else {
-        	for(Queen queen: this.allies) {
-            	queen.actions.getActions(this,queen);
+        	for(Queen queen: this.player) {
+            	queen.moves.getMoves(this,queen);
             }
-            if(this.allies[0].actions.actions.size() == 0 && this.allies[1].actions.actions.size() == 0 
-            && this.allies[2].actions.actions.size() == 0 && this.allies[3].actions.actions.size() == 0) {
+            if(this.player[0].moves.moves.size() == 0 && this.player[1].moves.moves.size() == 0 
+            && this.player[2].moves.moves.size() == 0 && this.player[3].moves.moves.size() == 0) {
             	return 0;
             }
         }
         return -1;
 	}
+
 	public int evaluateBoard() {
         int score = 0;
-        for(int i = 0; i < allies.length; i ++) {
-            allies[i].actions.getActions(this, allies[i]);
-            score += allies[i].actions.actions.size();
+        for(int i = 0; i < player.length; i ++) {
+            player[i].moves.getMoves(this, player[i]);
+            score += player[i].moves.moves.size();
         }
-        for(int i = 0; i < opponents.length; i ++) {
-            opponents[i].actions.getActions(this, opponents[i]);
-            score -= opponents[i].actions.actions.size();
+        for(int i = 0; i < opponent.length; i ++) {
+            opponent[i].moves.getMoves(this, opponent[i]);
+            score -= opponent[i].moves.moves.size();
         }
         return score;
     }
 	
-	public boolean indanger() {
-		for(int i=0; i<allies.length; i++) {
-			//see cells around allies[i] to check if it is in danger. 
-			int queenRow = allies[i].getRow();
-			int queenCol = allies[i].getCol();
-			
+	public boolean inDanger() {
+		for(int i=0; i<player.length; i++) {
+			//see cells around player[i] to check if it is in danger. 
+			int queenRow = player[i].getRow();
+			int queenCol = player[i].getCol();
 			
 			//make a list of emptyPostions
 			ArrayList<Tile> emptyPositions = new ArrayList<>();
@@ -230,8 +238,7 @@ public class Board {
 				emptyPositions.add(new Tile(queenRow,queenCol-1));
 			}
 			
-			
-			//see if its below two
+			//check if its below two
 			if (emptyPositions.size() == 1) {
 				return true;
 			}else if (emptyPositions.size() == 2) {
@@ -248,12 +255,12 @@ public class Board {
 	}
 	
 	public void printMove() {
-		System.out.println("QCurr: "+move.get(0).toString());
-		System.out.println("QNew: "+move.get(1).toString());
-		System.out.println("Arrow: "+move.get(2).toString());
+		System.out.println("QCurr: "+ makeMove.get(0).toString());
+		System.out.println("QNew: "+ makeMove.get(1).toString());
+		System.out.println("Arrow: "+ makeMove.get(2).toString());
 	}
 	public void printBoard() {
-		for(int r=9;r>=0;--r) {
+		for(int r=9; r>=0; --r) {
 			for(int c=0;c<10;++c) {
 				if(board[r][c] instanceof Queen)System.out.print(" Q");
 				else if(board[r][c] instanceof Arrow)System.out.print(" A");
@@ -262,7 +269,13 @@ public class Board {
 			System.out.println();
 		}
 	}
-	public Queen getChosen() {return this.chosen;}
-	public void setChosen(Queen chosen) {this.chosen = chosen;}
+
+	public Queen getSelected() {
+		return this.selected;
+	}
+
+	public void setSelected(Queen selected) {
+		this.selected = selected;
+	}
 	
 }
