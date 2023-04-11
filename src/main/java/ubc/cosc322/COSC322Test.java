@@ -147,6 +147,7 @@ public class COSC322Test extends GamePlayer{
     
     public void handleGameActionMove(Map<String, Object> msgDetails) {
     	// opponent's Move
+    	long init_time = System.currentTimeMillis();
     	
     	ArrayList<Integer> queenPrevPos = (ArrayList<Integer>) msgDetails.get(AmazonsGameMessage.QUEEN_POS_CURR);
         ArrayList<Integer> queenNewPos = (ArrayList<Integer>) msgDetails.get(AmazonsGameMessage.QUEEN_POS_NEXT);
@@ -158,12 +159,12 @@ public class COSC322Test extends GamePlayer{
         //child.getBoard().printBoard();
         tree.addChild(node, child);
     	node=child;
-    	if(node.getBoard().gameOverCheck(true) == 0) {
-    		System.out.println("You are out of moves. You lose!");
+    	if(node.getBoard().gameOverCheck(false) == 0) {
+    		System.out.println("Your opponent is out of moves. You win1!");
     		return;
     	}
-    	if(node.getBoard().gameOverCheck(false) == 1) {
-    		System.out.println("Your opponent is out of moves. You win!");
+        if(node.getBoard().gameOverCheck(true) == 1) {
+    		System.out.println("You are out of moves. You lose1!");
     		return;
     	}
     	
@@ -187,20 +188,21 @@ public class COSC322Test extends GamePlayer{
         System.out.println("Ally: Queen from [" + queenPrevPos.get(0) + ", " + queenPrevPos.get(1) +"]"
         		+ " to ["+ queenNewPos.get(0) + ", " + queenNewPos.get(1) +"]");
         System.out.println(node.getBoard().selected);
+        while (System.currentTimeMillis() < init_time+1500) {
+        	//wait
+        }
         gameClient.sendMoveMessage(queenPrevPos,queenNewPos,arrPos);
         gamegui.updateGameState(queenPrevPos, queenNewPos, arrPos);
         //node.getBoard().printBoard();
-        if(node.getBoard().gameOverCheck(false) == 1) {
-    		System.out.println("Your opponent is out of makeMoves. You win!");
+        if(node.getBoard().gameOverCheck(false) == 0) {
+    		System.out.println("You are out of moves. You lose2!");
     		return;
     	}
-        if(node.getBoard().gameOverCheck(true) == 0) {
-    		System.out.println("You are out of makeMoves. You lose!");
+        if(node.getBoard().gameOverCheck(true) == 1) {
+    		System.out.println("Your opponent is out of moves. You win2!");
     		return;
     	}
     }
-    
-    
     @Override
     public String userName() {
     	return userName;
